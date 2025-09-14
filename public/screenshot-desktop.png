@@ -1,0 +1,22 @@
+
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" fill="#f8fafc"/>
+  <rect x="50" y="50" width="1180" height="620" fill="white" rx="10" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="640" y="100" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#1e293b">Subscription Manager</text>
+  <text x="640" y="150" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#64748b">Desktop Dashboard View</text>
+  <rect x="100" y="200" width="200" height="120" fill="#3b82f6" rx="8"/>
+  <text x="200" y="260" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="white">Total Subscriptions</text>
+  <text x="200" y="285" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="white">12</text>
+  <rect x="350" y="200" width="200" height="120" fill="#10b981" rx="8"/>
+  <text x="450" y="260" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="white">Monthly Cost</text>
+  <text x="450" y="285" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="white">₹2,450</text>
+  <rect x="600" y="200" width="200" height="120" fill="#f59e0b" rx="8"/>
+  <text x="700" y="260" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="white">Yearly Cost</text>
+  <text x="700" y="285" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="white">₹29,400</text>
+  <rect x="850" y="200" width="200" height="120" fill="#ef4444" rx="8"/>
+  <text x="950" y="260" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="white">Savings</text>
+  <text x="950" y="285" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="white">₹1,200</text>
+  <rect x="100" y="400" width="1080" height="200" fill="#f1f5f9" rx="8"/>
+  <text x="640" y="440" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#475569">Analytics Dashboard</text>
+  <text x="640" y="470" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#64748b">Charts and insights will appear here</text>
+</svg>
