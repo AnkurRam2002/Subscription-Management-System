@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { initializeDatabase, getCollection } from '@/lib/database';
 import { ObjectId } from 'mongodb';
+import { validateSubscription, validateObjectId, sanitizeInput } from '@/utils/validation';
 
 // GET /api/subscriptions/[id] - Get a specific subscription
 export async function GET(request, { params }) {
@@ -8,6 +9,16 @@ export async function GET(request, { params }) {
     const collection = await getCollection('subscriptions');
     
     const { id } = await params;
+    
+    // Validate ObjectId
+    const idValidation = validateObjectId(id);
+    if (!idValidation.isValid) {
+      return NextResponse.json(
+        { success: false, error: idValidation.error },
+        { status: 400 }
+      );
+    }
+    
     const subscription = await collection.findOne({
       _id: new ObjectId(id)
     });
@@ -38,12 +49,39 @@ export async function PUT(request, { params }) {
     const collection = await getCollection('subscriptions');
     
     const { id } = await params;
+    
+    // Validate ObjectId
+    const idValidation = validateObjectId(id);
+    if (!idValidation.isValid) {
+      return NextResponse.json(
+        { success: false, error: idValidation.error },
+        { status: 400 }
+      );
+    }
+    
     const body = await request.json();
-    body.updatedAt = new Date();
+    
+    // Sanitize input
+    const sanitizedData = sanitizeInput(body);
+    
+    // Validate input
+    const validation = validateSubscription(sanitizedData);
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Validation failed', 
+          details: validation.errors 
+        },
+        { status: 400 }
+      );
+    }
+    
+    sanitizedData.updatedAt = new Date();
     
     const result = await collection.updateOne(
       { _id: new ObjectId(id) },
-      { $set: body }
+      { $set: sanitizedData }
     );
     
     if (result.matchedCount === 0) {
@@ -76,6 +114,16 @@ export async function DELETE(request, { params }) {
     const collection = await getCollection('subscriptions');
     
     const { id } = await params;
+    
+    // Validate ObjectId
+    const idValidation = validateObjectId(id);
+    if (!idValidation.isValid) {
+      return NextResponse.json(
+        { success: false, error: idValidation.error },
+        { status: 400 }
+      );
+    }
+    
     const result = await collection.deleteOne({
       _id: new ObjectId(id)
     });

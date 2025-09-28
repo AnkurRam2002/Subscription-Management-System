@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { initializeDatabase, getCollection } from '@/lib/database';
 import { createSubscription } from '@/entities/Subscription';
+import { validateSubscription, sanitizeInput } from '@/utils/validation';
 
 // GET /api/subscriptions - Get all subscriptions
 export async function GET(request) {
@@ -47,7 +48,24 @@ export async function POST(request) {
     const collection = await getCollection('subscriptions');
     
     const body = await request.json();
-    const subscription = createSubscription(body);
+    
+    // Sanitize input
+    const sanitizedData = sanitizeInput(body);
+    
+    // Validate input
+    const validation = validateSubscription(sanitizedData);
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Validation failed', 
+          details: validation.errors 
+        },
+        { status: 400 }
+      );
+    }
+    
+    const subscription = createSubscription(sanitizedData);
     
     const result = await collection.insertOne(subscription);
     const savedSubscription = { ...subscription, _id: result.insertedId };

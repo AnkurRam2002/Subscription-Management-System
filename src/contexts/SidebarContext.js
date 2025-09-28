@@ -5,59 +5,35 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const SidebarContext = createContext();
 
 export function SidebarProvider({ children }) {
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Initialize state after hydration
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedSidebarOpen = localStorage.getItem('sidebar-open');
-      return savedSidebarOpen !== null ? JSON.parse(savedSidebarOpen) : false;
+      if (savedSidebarOpen !== null) {
+        setSidebarOpen(JSON.parse(savedSidebarOpen));
+      }
     }
-    return false;
-  });
-  
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedCollapsed = localStorage.getItem('sidebar-collapsed');
-      return savedCollapsed !== null ? JSON.parse(savedCollapsed) : false;
-    }
-    return false;
-  });
-  
-  const [isInitialized, setIsInitialized] = useState(() => {
-    return typeof window !== 'undefined';
-  });
+    setIsHydrated(true);
+  }, []);
 
-  // Save sidebar open state to localStorage when it changes
+  // Save sidebar open state to localStorage
   useEffect(() => {
-    if (isInitialized) {
+    if (isHydrated && typeof window !== 'undefined') {
       localStorage.setItem('sidebar-open', JSON.stringify(sidebarOpen));
     }
-  }, [sidebarOpen, isInitialized]);
+  }, [sidebarOpen, isHydrated]);
 
-  // Save collapsed state to localStorage when it changes
-  useEffect(() => {
-    if (isInitialized) {
-      localStorage.setItem('sidebar-collapsed', JSON.stringify(isCollapsed));
-    }
-  }, [isCollapsed, isInitialized]);
-
-  const toggleSidebar = () => {
-    console.log('Toggling sidebar from', sidebarOpen, 'to', !sidebarOpen);
-    setSidebarOpen(!sidebarOpen);
-  };
-  
-  const toggleCollapse = () => {
-    console.log('Toggling collapse from', isCollapsed, 'to', !isCollapsed);
-    setIsCollapsed(!isCollapsed);
-  };
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   return (
     <SidebarContext.Provider value={{
       sidebarOpen,
-      isCollapsed,
-      isInitialized,
       setSidebarOpen,
-      setIsCollapsed,
       toggleSidebar,
-      toggleCollapse
+      isHydrated
     }}>
       {children}
     </SidebarContext.Provider>

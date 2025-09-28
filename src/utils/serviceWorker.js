@@ -50,11 +50,15 @@ export const isOnline = () => navigator.onLine;
 
 // Listen for online/offline events
 export const addOnlineListener = (callback) => {
-  window.addEventListener('online', callback);
-  window.addEventListener('offline', callback);
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', callback);
+    window.addEventListener('offline', callback);
+  }
 };
 
 export const removeOnlineListener = (callback) => {
-  window.removeEventListener('online', callback);
-  window.removeEventListener('offline', callback);
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('online', callback);
+    window.removeEventListener('offline', callback);
+  }
 };

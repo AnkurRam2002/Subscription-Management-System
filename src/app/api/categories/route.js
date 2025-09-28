@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { initializeDatabase, getCollection } from '@/lib/database';
 import { createCategory } from '@/entities/Category';
+import { validateCategory, sanitizeInput } from '@/utils/validation';
 
 // GET /api/categories - Get all categories
 export async function GET() {
@@ -28,7 +29,24 @@ export async function POST(request) {
     const collection = await getCollection('categories');
     
     const body = await request.json();
-    const category = createCategory(body.name, body.description, body.color, body.icon);
+    
+    // Sanitize input
+    const sanitizedData = sanitizeInput(body);
+    
+    // Validate input
+    const validation = validateCategory(sanitizedData);
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Validation failed', 
+          details: validation.errors 
+        },
+        { status: 400 }
+      );
+    }
+    
+    const category = createCategory(sanitizedData.name, sanitizedData.description, sanitizedData.color, sanitizedData.icon);
     
     const result = await collection.insertOne(category);
     const savedCategory = { ...category, _id: result.insertedId };

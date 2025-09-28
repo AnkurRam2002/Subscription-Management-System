@@ -3,36 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AddSubscriptionModal from '@/components/AddSubscriptionModal';
+import { useData } from '@/contexts/DataContext';
 import Icon from '@/components/Icon';
-import { useSidebar } from '@/contexts/SidebarContext';
 
 export default function AddSubscriptionPage() {
   const router = useRouter();
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const { sidebarOpen, toggleSidebar } = useSidebar();
+  const { categories, loading, addSubscription } = useData();
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
-    try {
-      setLoading(true);
-      
-      // Load categories
-      const categoriesResponse = await fetch('/api/categories');
-      const categoriesData = await categoriesResponse.json();
-      
-      if (categoriesData.success) {
-        setCategories(categoriesData.data);
-      }
-    } catch (error) {
-      console.error('Error loading categories:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Categories and loading are now managed by DataContext
 
   const handleAddSubscription = async (subscriptionData) => {
     try {
@@ -47,6 +25,9 @@ export default function AddSubscriptionPage() {
       const result = await response.json();
       
       if (result.success) {
+        // Update global state with new subscription
+        addSubscription(result.data);
+        
         // Redirect to dashboard after successful addition
         router.push('/');
       } else {
@@ -70,20 +51,10 @@ export default function AddSubscriptionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Main Content */}
-      <div className="flex-1">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8 flex justify-between items-start">
             <div className="flex items-center gap-4">
-              {/* Mobile Menu Button */}
-              <button
-                onClick={toggleSidebar}
-                className="p-2 rounded-lg hover:bg-slate-100 transition-colors lg:hidden"
-              >
-                <Icon name="menu" className="w-6 h-6 text-slate-600" />
-              </button>
               
               <div>
                 <h1 className="text-4xl font-bold text-slate-900">Add New Subscription</h1>
@@ -101,8 +72,6 @@ export default function AddSubscriptionPage() {
               isPage={true}
             />
           </div>
-        </div>
-      </div>
     </div>
   );
 }

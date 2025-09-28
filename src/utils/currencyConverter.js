@@ -106,8 +106,61 @@ export const getUSDToINRRate = async () => {
   }
 };
 
-// Helper function to format currency with proper locale
+// Helper function to format large numbers with abbreviations
+const formatLargeNumber = (amount, currency) => {
+  const absAmount = Math.abs(amount);
+  
+  if (currency === 'INR') {
+    // Indian numbering system: Lakhs (L) and Crores (Cr)
+    if (absAmount >= 10000000) { // 1 Crore = 10 Million
+      return (amount / 10000000).toFixed(1).replace(/\.0$/, '') + 'Cr';
+    } else if (absAmount >= 100000) { // 1 Lakh = 100 Thousand
+      return (amount / 100000).toFixed(1).replace(/\.0$/, '') + 'L';
+    } else if (absAmount >= 10000) { // 10K onwards
+      return (amount / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+  } else {
+    // International numbering system: Millions (M) and Billions (B)
+    if (absAmount >= 1000000000) { // 1 Billion
+      return (amount / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+    } else if (absAmount >= 1000000) { // 1 Million
+      return (amount / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    } else if (absAmount >= 10000) { // 10K onwards
+      return (amount / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+  }
+  
+  return amount.toString();
+};
+
+// Helper function to format currency with proper locale and abbreviations
 export const formatCurrency = (amount, currency = 'INR', locale = 'en-IN') => {
+  // Get currency symbol
+  const getCurrencySymbol = (currency) => {
+    const symbols = {
+      'INR': '₹',
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£',
+      'JPY': '¥',
+      'CAD': 'C$',
+      'AUD': 'A$',
+      'CHF': 'CHF',
+      'CNY': '¥',
+      'SGD': 'S$'
+    };
+    return symbols[currency] || currency;
+  };
+
+  const symbol = getCurrencySymbol(currency);
+  const formattedNumber = formatLargeNumber(amount, currency);
+  
+  // For large numbers, show abbreviated format
+  if (formattedNumber !== amount.toString()) {
+    return `${symbol}${formattedNumber}`;
+  }
+  
+  // For smaller numbers, use standard formatting
   const formatted = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency,

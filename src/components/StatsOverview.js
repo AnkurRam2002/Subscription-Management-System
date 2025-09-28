@@ -1,82 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Icon from './Icon';
-import { convertCurrency, formatCurrency } from '../utils/currencyConverter';
+import { formatCurrency } from '../utils/currencyConverter';
+import { useSubscriptionCalculations } from '../hooks/useSubscriptionCalculations';
 
-export default function StatsOverview({ subscriptions, currency = 'INR' }) {
-  const [convertedSubscriptions, setConvertedSubscriptions] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Convert all subscriptions to target currency
-  useEffect(() => {
-    const convertSubscriptions = async () => {
-      setIsLoading(true);
-      try {
-        const converted = await Promise.all(
-          subscriptions.map(async (sub) => {
-            let monthlyCost = sub.price;
-            
-            // Convert to monthly cost for different billing cycles
-            switch (sub.billingCycle) {
-              case 'yearly':
-                monthlyCost = sub.price / 12;
-                break;
-              case 'weekly':
-                monthlyCost = sub.price * 4.33; // Average weeks per month
-                break;
-              case 'daily':
-                monthlyCost = sub.price * 30; // Average days per month
-                break;
-              default:
-                monthlyCost = sub.price;
-            }
-            
-            // Calculate cost per person for shared subscriptions
-            const sharedBy = sub.sharedBy || 1;
-            const costPerPerson = monthlyCost / sharedBy;
-            
-            // Convert to target currency
-            const convertedCost = await convertCurrency(costPerPerson, sub.currency, currency);
-            
-            return {
-              ...sub,
-              convertedMonthlyCost: convertedCost,
-              sharedBy: sharedBy
-            };
-          })
-        );
-        
-        setConvertedSubscriptions(converted);
-      } catch (error) {
-        console.error('Error converting subscriptions:', error);
-        // Fallback to original subscriptions
-        setConvertedSubscriptions(subscriptions.map(sub => {
-          const sharedBy = sub.sharedBy || 1;
-          return {
-            ...sub,
-            convertedMonthlyCost: sub.price / sharedBy,
-            sharedBy: sharedBy
-          };
-        }));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    convertSubscriptions();
-  }, [subscriptions, currency]);
-
-  const totalMonthlyCost = convertedSubscriptions
-    .filter(sub => sub.status === 'active' && !sub.hasFreeTrial)
-    .reduce((total, sub) => total + (sub.convertedMonthlyCost || 0), 0);
-
-  const totalYearlyCost = totalMonthlyCost * 12;
-
-  const activePaidSubscriptions = subscriptions.filter(sub => sub.status === 'active' && !sub.hasFreeTrial).length;
-  const activeFreeTrialSubscriptions = subscriptions.filter(sub => sub.status === 'active' && sub.hasFreeTrial).length;
-  const cancelledSubscriptions = subscriptions.filter(sub => sub.status === 'cancelled').length;
-  const pausedSubscriptions = subscriptions.filter(sub => sub.status === 'paused').length;
+export default function StatsOverview({ subscriptions = [], currency = 'INR' }) {
+  const { 
+    totalMonthlySpending, 
+    totalYearlySpending, 
+    subscriptionCounts, 
+    isLoading 
+  } = useSubscriptionCalculations(subscriptions, currency);
 
   const formatAmount = (amount) => {
     const locale = currency === 'INR' ? 'en-IN' : 'en-US';
@@ -86,7 +20,7 @@ export default function StatsOverview({ subscriptions, currency = 'INR' }) {
   const costStats = [
     {
       title: 'Monthly Cost',
-      value: formatAmount(totalMonthlyCost),
+      value: formatAmount(totalMonthlySpending),
       icon: 'dollar',
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-50',
@@ -94,7 +28,7 @@ export default function StatsOverview({ subscriptions, currency = 'INR' }) {
     },
     {
       title: 'Yearly Cost',
-      value: formatAmount(totalYearlyCost),
+      value: formatAmount(totalYearlySpending),
       icon: 'chart',
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
@@ -105,7 +39,7 @@ export default function StatsOverview({ subscriptions, currency = 'INR' }) {
   const otherStats = [
     {
       title: 'Paid Active',
-      value: activePaidSubscriptions,
+      value: subscriptionCounts.activePaid,
       icon: 'check',
       color: 'text-green-600',
       bgColor: 'bg-green-50',
@@ -113,7 +47,7 @@ export default function StatsOverview({ subscriptions, currency = 'INR' }) {
     },
     {
       title: 'Free Trial',
-      value: activeFreeTrialSubscriptions,
+      value: subscriptionCounts.activeFreeTrial,
       icon: 'gift',
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
@@ -121,7 +55,7 @@ export default function StatsOverview({ subscriptions, currency = 'INR' }) {
     },
     {
       title: 'Cancelled',
-      value: cancelledSubscriptions,
+      value: subscriptionCounts.cancelled,
       icon: 'x',
       color: 'text-red-600',
       bgColor: 'bg-red-50',
@@ -129,7 +63,7 @@ export default function StatsOverview({ subscriptions, currency = 'INR' }) {
     },
     {
       title: 'Paused',
-      value: pausedSubscriptions,
+      value: subscriptionCounts.paused,
       icon: 'pause',
       color: 'text-amber-600',
       bgColor: 'bg-amber-50',
@@ -137,7 +71,7 @@ export default function StatsOverview({ subscriptions, currency = 'INR' }) {
     },
     {
       title: 'Total',
-      value: subscriptions.length,
+      value: subscriptionCounts.total,
       icon: 'more',
       color: 'text-slate-600',
       bgColor: 'bg-slate-50',

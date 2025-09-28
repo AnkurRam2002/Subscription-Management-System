@@ -6,12 +6,24 @@ let db = null;
 export const initializeDatabase = async () => {
   if (!client || !db) {
     try {
-      const uri = 'mongodb://localhost:27017/subscription-management';
+      const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/subscription-management';
+      console.log('MongoDB URI:', uri);
       console.log('Connecting to MongoDB...');
-      client = new MongoClient(uri);
+      
+      // Connection pooling configuration for better performance
+      client = new MongoClient(uri, {
+        maxPoolSize: 10, // Maximum number of connections in the pool
+        serverSelectionTimeoutMS: 5000, // How long to try selecting a server
+        socketTimeoutMS: 45000, // How long to wait for a response
+        connectTimeoutMS: 10000, // How long to wait for initial connection
+        maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
+        retryWrites: true, // Retry failed writes
+        retryReads: true, // Retry failed reads
+      });
+      
       await client.connect();
       db = client.db('subscription-management');
-      console.log('Database connection established successfully');
+      console.log('Database connection established successfully with connection pooling');
     } catch (error) {
       console.error('Error during database initialization:', error);
       // Reset variables on error

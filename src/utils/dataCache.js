@@ -27,22 +27,24 @@ class DataCache {
     }
 
     // Check localStorage
-    try {
-      const cached = localStorage.getItem(key);
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (this.isCacheValid(timestamp)) {
-          // Store in memory for faster access
-          this.memoryCache.set(key, data);
-          this.cacheTimestamps.set(key, timestamp);
-          return data;
-        } else {
-          // Remove expired cache
-          localStorage.removeItem(key);
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem(key);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          if (this.isCacheValid(timestamp)) {
+            // Store in memory for faster access
+            this.memoryCache.set(key, data);
+            this.cacheTimestamps.set(key, timestamp);
+            return data;
+          } else {
+            // Remove expired cache
+            localStorage.removeItem(key);
+          }
         }
+      } catch (error) {
+        console.error('Error reading from localStorage:', error);
       }
-    } catch (error) {
-      console.error('Error reading from localStorage:', error);
     }
 
     return null;
@@ -57,10 +59,12 @@ class DataCache {
     this.cacheTimestamps.set(key, timestamp);
 
     // Store in localStorage
-    try {
-      localStorage.setItem(key, JSON.stringify({ data, timestamp }));
-    } catch (error) {
-      console.error('Error writing to localStorage:', error);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(key, JSON.stringify({ data, timestamp }));
+      } catch (error) {
+        console.error('Error writing to localStorage:', error);
+      }
     }
   }
 
@@ -74,16 +78,20 @@ class DataCache {
   invalidate(key) {
     this.memoryCache.delete(key);
     this.cacheTimestamps.delete(key);
-    localStorage.removeItem(key);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(key);
+    }
   }
 
   // Invalidate all caches
   invalidateAll() {
     this.memoryCache.clear();
     this.cacheTimestamps.clear();
-    Object.values(CACHE_KEYS).forEach(key => {
-      localStorage.removeItem(key);
-    });
+    if (typeof window !== 'undefined') {
+      Object.values(CACHE_KEYS).forEach(key => {
+        localStorage.removeItem(key);
+      });
+    }
   }
 
   // Get cache age in minutes
