@@ -1,15 +1,21 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useAuth } from './AuthContext';
 
 const DataContext = createContext(undefined);
 
 export function DataProvider({ children }) {
+  const { isAuthenticated, authenticatedFetch } = useAuth();
   const [subscriptions, setSubscriptions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastFetch, setLastFetch] = useState(null);
+  
+  // Use ref to store the latest authenticatedFetch function
+  const authenticatedFetchRef = useRef(authenticatedFetch);
+  authenticatedFetchRef.current = authenticatedFetch;
   
   // Pagination state
   const [pagination, setPagination] = useState({
@@ -32,9 +38,9 @@ export function DataProvider({ children }) {
 
   // Fetch all data in a single request with pagination
   const fetchAllData = useCallback(async (forceRefresh = false, page = 1, limit = 50) => {
-    // Skip if data is fresh and not forcing refresh (only for first page)
-    if (!forceRefresh && !isDataStale() && subscriptions.length > 0 && categories.length > 0 && page === 1) {
-      console.log('Using cached data');
+    // Skip if not authenticated
+    if (!isAuthenticated) {
+      setLoading(false);
       return;
     }
 
@@ -44,7 +50,7 @@ export function DataProvider({ children }) {
       console.log(`Fetching fresh data - page ${page}, limit ${limit}...`);
 
       // Single API call to get both subscriptions and categories with pagination
-      const response = await fetch(`/api/data?page=${page}&limit=${limit}`);
+      const response = await authenticatedFetchRef.current(`/api/data?page=${page}&limit=${limit}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -69,7 +75,14 @@ export function DataProvider({ children }) {
           setSubscriptions(prev => [...prev, ...(Array.isArray(subsData) ? subsData : [])]);
         }
         
-        setPagination(result.pagination || pagination);
+        setPagination(result.pagination || {
+          page: 1,
+          limit: 50,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false
+        });
         setLastFetch(Date.now());
       } else {
         throw new Error(result.error || 'Failed to fetch data');
@@ -80,24 +93,34 @@ export function DataProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [subscriptions.length, categories.length, isDataStale, pagination]);
+  }, [isAuthenticated]);
 
-  // Initial data fetch
+  // Initial data fetch - only when authentication state changes
   useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
+    if (isAuthenticated) {
+      fetchAllData();
+    } else {
+      // Clear data when not authenticated
+      setSubscriptions([]);
+      setCategories([]);
+      setLoading(false);
+      setError(null);
+    }
+  }, [isAuthenticated]);
 
   // Refresh data function
   const refreshData = useCallback(() => {
-    fetchAllData(true, 1, pagination.limit);
-  }, [fetchAllData, pagination.limit]);
+    if (isAuthenticated) {
+      fetchAllData(true, 1, 50);
+    }
+  }, [isAuthenticated, fetchAllData]);
 
   // Load more data (pagination)
   const loadMoreData = useCallback(() => {
-    if (pagination.hasNext && !loading) {
-      fetchAllData(false, pagination.page + 1, pagination.limit);
+    if (isAuthenticated && !loading) {
+      fetchAllData(false, 2, 50); // Simplified for now
     }
-  }, [fetchAllData, pagination.hasNext, pagination.page, pagination.limit, loading]);
+  }, [isAuthenticated, loading, fetchAllData]);
 
   // Add new subscription
   const addSubscription = useCallback((newSubscription) => {

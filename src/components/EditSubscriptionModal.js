@@ -56,7 +56,7 @@ export default function EditSubscriptionModal({ subscription, categories, onClos
       newErrors.name = 'Name is required';
     }
 
-    if (!formData.price || parseFloat(formData.price) <= 0) {
+    if (!formData.price || (typeof formData.price === 'number' ? formData.price <= 0 : parseFloat(formData.price) <= 0)) {
       newErrors.price = 'Price must be greater than 0';
     }
 
@@ -92,8 +92,30 @@ export default function EditSubscriptionModal({ subscription, categories, onClos
       return;
     }
 
+    // Ensure price is a valid positive number
+    if (typeof formData.price !== 'number' || formData.price <= 0) {
+      alert('Please enter a valid price greater than 0');
+      return;
+    }
+
+    // Prepare data with proper types
+    const updateData = {
+      ...formData,
+      price: formData.price, // Already a number from handleChange
+      nextBillingDate: formData.nextBillingDate,
+      // Handle free trial dates - only include them if hasFreeTrial is true and dates are provided
+      ...(formData.hasFreeTrial && {
+        freeTrialMonths: formData.freeTrialMonths, // Already a number from handleChange
+        freeTrialStartDate: formData.freeTrialStartDate || null,
+        paidSubscriptionStartDate: formData.paidSubscriptionStartDate || null,
+      }),
+    };
+
+    console.log('Updating subscription with data:', updateData);
+    console.log('Price type:', typeof updateData.price, 'Value:', updateData.price);
+
     try {
-      await onUpdate(subscription._id, formData);
+      await onUpdate(subscription._id, updateData);
       onClose();
     } catch (error) {
       console.error('Error updating subscription:', error);
@@ -102,9 +124,19 @@ export default function EditSubscriptionModal({ subscription, categories, onClos
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    
+    // Handle different input types
+    let processedValue = value;
+    if (type === 'checkbox') {
+      processedValue = checked;
+    } else if (type === 'number') {
+      // For number inputs, convert to number or keep as string if empty
+      processedValue = value === '' ? '' : parseFloat(value);
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: processedValue
     }));
 
     // Clear error when user starts typing

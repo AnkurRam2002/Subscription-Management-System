@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Icon from './Icon';
 import SubscriptionDetailsModal from './SubscriptionDetailsModal';
+import { formatCurrency } from '../utils/currencyConverter';
 
 export default function SubscriptionCard({ subscription, categories, onDelete, onUpdate }) {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -10,10 +11,7 @@ export default function SubscriptionCard({ subscription, categories, onDelete, o
   const category = categories.find(cat => cat._id === subscription.categoryId);
 
   const formatPrice = (price, currency) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD'
-    }).format(price);
+    return formatCurrency(price, currency || 'USD');
   };
 
   const formatDate = (date) => {

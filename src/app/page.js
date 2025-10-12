@@ -7,6 +7,7 @@ import StatsOverview from '@/components/StatsOverview';
 import LoadMoreButton from '@/components/LoadMoreButton';
 import { useRouter } from 'next/navigation';
 import { useData } from '@/contexts/DataContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/Icon';
 
 export default function Home() {
@@ -26,6 +27,8 @@ export default function Home() {
     updateSubscription,
     deleteSubscription 
   } = useData();
+  
+  const { authenticatedFetch } = useAuth();
 
   // Refresh handler
   const handleRefresh = () => {
@@ -84,7 +87,7 @@ export default function Home() {
     }
 
     try {
-      const response = await fetch(`/api/subscriptions/${id}`, {
+      const response = await authenticatedFetch(`/api/subscriptions/${id}`, {
         method: 'DELETE',
       });
 
@@ -104,7 +107,7 @@ export default function Home() {
 
   const handleUpdateSubscription = async (id, updatedData) => {
     try {
-      const response = await fetch(`/api/subscriptions/${id}`, {
+      const response = await authenticatedFetch(`/api/subscriptions/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -264,8 +267,8 @@ export default function Home() {
             
             {/* Load More Button */}
             <LoadMoreButton />
-          </>
-        )}
+        </>
+      )}
 
     </div>
   );

@@ -1,9 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getCollection } from '@/lib/database';
+import { requireAuth } from '@/utils/auth';
+import { ObjectId } from 'mongodb';
 
 // GET /api/data - Get all data (subscriptions + categories) in a single request with pagination
 export async function GET(request) {
   try {
+    // Authenticate user
+    const authResult = await requireAuth(request);
+    if (!authResult.success) {
+      return authResult.response;
+    }
+
+    const { user } = authResult;
+
     // Get both collections
     const [subscriptionsCollection, categoriesCollection] = await Promise.all([
       getCollection('subscriptions'),
@@ -11,7 +21,6 @@ export async function GET(request) {
     ]);
     
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
     const status = searchParams.get('status');
     const categoryId = searchParams.get('categoryId');
     
@@ -20,12 +29,10 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit')) || 50; // Default 50 items per page
     const skip = (page - 1) * limit;
 
-    // Build query for subscriptions
-    let subscriptionsQuery = {};
-    
-    if (userId) {
-      subscriptionsQuery.userId = userId;
-    }
+    // Build query for subscriptions (filter by user)
+    let subscriptionsQuery = {
+      userId: user.userId
+    };
     
     if (status) {
       subscriptionsQuery.status = status;

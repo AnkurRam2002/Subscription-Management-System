@@ -2,22 +2,29 @@ import { NextResponse } from 'next/server';
 import { initializeDatabase, getCollection } from '@/lib/database';
 import { createSubscription } from '@/entities/Subscription';
 import { validateSubscription, sanitizeInput } from '@/utils/validation';
+import { requireAuth } from '@/utils/auth';
+import { ObjectId } from 'mongodb';
 
 // GET /api/subscriptions - Get all subscriptions
 export async function GET(request) {
   try {
+    // Authenticate user
+    const authResult = await requireAuth(request);
+    if (!authResult.success) {
+      return authResult.response;
+    }
+
+    const { user } = authResult;
+
     const collection = await getCollection('subscriptions');
     
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
     const status = searchParams.get('status');
     const categoryId = searchParams.get('categoryId');
 
-    let query = {};
-    
-    if (userId) {
-      query.userId = userId;
-    }
+    let query = {
+      userId: user.userId
+    };
     
     if (status) {
       query.status = status;
@@ -45,12 +52,22 @@ export async function GET(request) {
 // POST /api/subscriptions - Create a new subscription
 export async function POST(request) {
   try {
+    // Authenticate user
+    const authResult = await requireAuth(request);
+    if (!authResult.success) {
+      return authResult.response;
+    }
+
+    const { user } = authResult;
     const collection = await getCollection('subscriptions');
     
     const body = await request.json();
     
     // Sanitize input
     const sanitizedData = sanitizeInput(body);
+    
+    // Add user ID to subscription data
+    sanitizedData.userId = user.userId;
     
     // Validate input
     const validation = validateSubscription(sanitizedData);

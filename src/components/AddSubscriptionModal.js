@@ -32,7 +32,7 @@ export default function AddSubscriptionModal({ categories, onClose, onAdd, isPag
       newErrors.name = 'Name is required';
     }
 
-    if (!formData.price || parseFloat(formData.price) <= 0) {
+    if (!formData.price || (typeof formData.price === 'number' ? formData.price <= 0 : parseFloat(formData.price) <= 0)) {
       newErrors.price = 'Price must be greater than 0';
     }
 
@@ -68,21 +68,46 @@ export default function AddSubscriptionModal({ categories, onClose, onAdd, isPag
       return;
     }
 
+    // Ensure price is a valid positive number
+    if (typeof formData.price !== 'number' || formData.price <= 0) {
+      alert('Please enter a valid price greater than 0');
+      return;
+    }
+
     const subscriptionData = {
       ...formData,
-      price: parseFloat(formData.price),
-      nextBillingDate: new Date(formData.nextBillingDate),
-      userId: 'default-user' // In a real app, this would come from authentication
+      price: formData.price, // Already a number from handleChange
+      nextBillingDate: formData.nextBillingDate,
+      // Convert freeTrialMonths to number if hasFreeTrial is true
+      ...(formData.hasFreeTrial && {
+        freeTrialMonths: formData.freeTrialMonths, // Already a number from handleChange
+        freeTrialStartDate: formData.freeTrialStartDate || null,
+        paidSubscriptionStartDate: formData.paidSubscriptionStartDate || null,
+      }),
+      // Remove userId - it will be added by the API from the JWT token
     };
+
+    console.log('Submitting subscription data:', subscriptionData);
+    console.log('Price type:', typeof subscriptionData.price, 'Value:', subscriptionData.price);
 
     await onAdd(subscriptionData);
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    
+    // Handle different input types
+    let processedValue = value;
+    if (type === 'checkbox') {
+      processedValue = checked;
+    } else if (type === 'number') {
+      // For number inputs, convert to number or keep as string if empty
+      processedValue = value === '' ? '' : parseFloat(value);
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: processedValue
     }));
 
     // Clear error when user starts typing

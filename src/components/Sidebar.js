@@ -2,12 +2,14 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import { useSidebar } from '@/contexts/SidebarContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/Icon';
 
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar, isHydrated } = useSidebar();
+  const { user, logout } = useAuth();
 
   // Don't render until hydrated
   if (!isHydrated) {
@@ -66,9 +68,10 @@ export default function Sidebar() {
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         shadow-lg lg:shadow-none
+        flex flex-col
       `}>
         {/* Header */}
-        <div className="p-6 border-b border-slate-200">
+        <div className="p-6 border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-slate-900">Menu</h2>
             <button
@@ -81,9 +84,9 @@ export default function Sidebar() {
         </div>
 
         {/* Content Area */}
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col flex-1 min-h-0">
           {/* Navigation */}
-          <nav className="p-4 flex-1">
+          <nav className="p-4 flex-1 overflow-y-auto">
             <ul className="space-y-2">
               {menuItems.map((item) => {
                 const isActive = pathname === item.path;
@@ -136,9 +139,43 @@ export default function Sidebar() {
             </ul>
           </nav>
 
-          {/* Footer */}
-          <div className="p-4 border-t border-slate-200">
-            <div className="text-xs text-slate-500 text-center">
+          {/* Profile Section */}
+          <div className="p-4 border-t border-slate-200 flex-shrink-0">
+            {/* User Profile with Tooltip */}
+            <div className="relative group mb-3">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-default">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Icon name="user" className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-slate-900 truncate">
+                    {user?.name || 'User'}
+                  </div>
+                  <div className="text-sm text-slate-500 truncate">
+                    {user?.email || 'user@example.com'}
+                  </div>
+                </div>
+                {/* Small Logout Button */}
+                <button
+                  onClick={logout}
+                  className="p-2 rounded-lg bg-red-100 hover:bg-red-200 transition-colors group/btn"
+                  title="Logout"
+                >
+                  <Icon name="logout" className="w-4 h-4 text-red-600 group-hover/btn:text-red-700" />
+                </button>
+              </div>
+              
+              {/* Tooltip */}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                <div className="font-medium">{user?.name || 'User'}</div>
+                <div className="text-slate-300 text-xs">{user?.email || 'user@example.com'}</div>
+                {/* Tooltip arrow */}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-900"></div>
+              </div>
+            </div>
+
+            {/* Version Info */}
+            <div className="text-xs text-slate-400 text-center pt-3 border-t border-slate-100">
               Subscription Manager v1.0
             </div>
           </div>

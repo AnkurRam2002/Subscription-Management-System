@@ -1,9 +1,6 @@
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
-import { SidebarProvider } from "@/contexts/SidebarContext";
-import { DataProvider } from "@/contexts/DataContext";
-import MainContent from "@/components/MainContent";
+import ConditionalLayout from "@/components/ConditionalLayout";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -35,14 +32,9 @@ export default function RootLayout({ children }) {
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-slate-50`}
       >
-        <DataProvider>
-          <SidebarProvider>
-            <Sidebar />
-            <MainContent>
-              {children}
-            </MainContent>
-          </SidebarProvider>
-        </DataProvider>
+        <ConditionalLayout>
+          {children}
+        </ConditionalLayout>
       </body>
     </html>
   );

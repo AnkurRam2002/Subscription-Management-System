@@ -4,17 +4,19 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AddSubscriptionModal from '@/components/AddSubscriptionModal';
 import { useData } from '@/contexts/DataContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/Icon';
 
 export default function AddSubscriptionPage() {
   const router = useRouter();
   const { categories, loading, addSubscription } = useData();
+  const { authenticatedFetch } = useAuth();
 
   // Categories and loading are now managed by DataContext
 
   const handleAddSubscription = async (subscriptionData) => {
     try {
-      const response = await fetch('/api/subscriptions', {
+      const response = await authenticatedFetch('/api/subscriptions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,7 +33,11 @@ export default function AddSubscriptionPage() {
         // Redirect to dashboard after successful addition
         router.push('/');
       } else {
-        alert('Failed to add subscription');
+        // Show detailed error message
+        const errorMessage = result.details 
+          ? `Validation failed: ${Object.values(result.details).join(', ')}`
+          : result.error || 'Failed to add subscription';
+        alert(errorMessage);
       }
     } catch (error) {
       console.error('Error adding subscription:', error);

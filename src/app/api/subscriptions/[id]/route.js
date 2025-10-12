@@ -2,10 +2,19 @@ import { NextResponse } from 'next/server';
 import { initializeDatabase, getCollection } from '@/lib/database';
 import { ObjectId } from 'mongodb';
 import { validateSubscription, validateObjectId, sanitizeInput } from '@/utils/validation';
+import { requireAuth } from '@/utils/auth';
 
 // GET /api/subscriptions/[id] - Get a specific subscription
 export async function GET(request, { params }) {
   try {
+    // Authenticate user
+    const authResult = await requireAuth(request);
+    if (!authResult.success) {
+      return authResult.response;
+    }
+
+    const { user } = authResult;
+
     const collection = await getCollection('subscriptions');
     
     const { id } = await params;
@@ -20,7 +29,8 @@ export async function GET(request, { params }) {
     }
     
     const subscription = await collection.findOne({
-      _id: new ObjectId(id)
+      _id: new ObjectId(id),
+      userId: user.userId // Ensure user owns this subscription
     });
     
     if (!subscription) {
@@ -46,6 +56,14 @@ export async function GET(request, { params }) {
 // PUT /api/subscriptions/[id] - Update a subscription
 export async function PUT(request, { params }) {
   try {
+    // Authenticate user
+    const authResult = await requireAuth(request);
+    if (!authResult.success) {
+      return authResult.response;
+    }
+
+    const { user } = authResult;
+
     const collection = await getCollection('subscriptions');
     
     const { id } = await params;
@@ -80,7 +98,10 @@ export async function PUT(request, { params }) {
     sanitizedData.updatedAt = new Date();
     
     const result = await collection.updateOne(
-      { _id: new ObjectId(id) },
+      { 
+        _id: new ObjectId(id),
+        userId: user.userId // Ensure user owns this subscription
+      },
       { $set: sanitizedData }
     );
     
@@ -92,7 +113,8 @@ export async function PUT(request, { params }) {
     }
     
     const updatedSubscription = await collection.findOne({
-      _id: new ObjectId(id)
+      _id: new ObjectId(id),
+      userId: user.userId
     });
     
     return NextResponse.json({
@@ -111,6 +133,14 @@ export async function PUT(request, { params }) {
 // DELETE /api/subscriptions/[id] - Delete a subscription
 export async function DELETE(request, { params }) {
   try {
+    // Authenticate user
+    const authResult = await requireAuth(request);
+    if (!authResult.success) {
+      return authResult.response;
+    }
+
+    const { user } = authResult;
+
     const collection = await getCollection('subscriptions');
     
     const { id } = await params;
@@ -125,7 +155,8 @@ export async function DELETE(request, { params }) {
     }
     
     const result = await collection.deleteOne({
-      _id: new ObjectId(id)
+      _id: new ObjectId(id),
+      userId: user.userId // Ensure user owns this subscription
     });
     
     if (result.deletedCount === 0) {

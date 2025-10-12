@@ -3,15 +3,13 @@
 import { useState } from 'react';
 import Icon from './Icon';
 import EditSubscriptionModal from './EditSubscriptionModal';
+import { formatCurrency } from '../utils/currencyConverter';
 
 export default function SubscriptionDetailsModal({ subscription, categories, onClose, onDelete, onUpdate }) {
   const [showEditModal, setShowEditModal] = useState(false);
 
   const formatPrice = (price, currency) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD'
-    }).format(price);
+    return formatCurrency(price, currency || 'USD');
   };
 
   const formatDate = (date) => {

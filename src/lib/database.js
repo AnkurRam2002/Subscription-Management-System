@@ -1,5 +1,13 @@
 import { MongoClient } from 'mongodb';
 
+console.log('=== DATABASE MODULE LOADED ===');
+console.log('Module loaded at:', new Date().toISOString());
+console.log('Environment check on load:');
+console.log('MONGODB_URI on module load:', process.env.MONGODB_URI);
+console.log('JWT_SECRET on module load:', process.env.JWT_SECRET);
+console.log('TEST on module load:', process.env.TEST_VAR);
+console.log('================================');
+
 let client = null;
 let db = null;
 
@@ -12,18 +20,18 @@ export const initializeDatabase = async () => {
       
       // Connection pooling configuration for better performance
       client = new MongoClient(uri, {
-        maxPoolSize: 10, // Maximum number of connections in the pool
-        serverSelectionTimeoutMS: 5000, // How long to try selecting a server
-        socketTimeoutMS: 45000, // How long to wait for a response
-        connectTimeoutMS: 10000, // How long to wait for initial connection
-        maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
-        retryWrites: true, // Retry failed writes
-        retryReads: true, // Retry failed reads
+        maxPoolSize: 10, 
+        serverSelectionTimeoutMS: 5000, 
+        socketTimeoutMS: 45000, 
+        connectTimeoutMS: 10000, 
+        maxIdleTimeMS: 30000, 
+        retryWrites: true, 
+        retryReads: true, 
       });
       
       await client.connect();
       db = client.db('subscription-management');
-      console.log('Database connection established successfully with connection pooling');
+      console.log('Database connection established successfully');
     } catch (error) {
       console.error('Error during database initialization:', error);
       // Reset variables on error
