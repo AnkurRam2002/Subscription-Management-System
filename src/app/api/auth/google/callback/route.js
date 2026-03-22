@@ -12,7 +12,7 @@ export async function GET(request) {
 
     if (error) {
       console.error('Google OAuth error:', error);
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3010';
+      const frontendUrl = process.env.PROD_URL || 'http://localhost:3010';
       return NextResponse.redirect(`${frontendUrl}/login?error=oauth_failed`);
     }
 
@@ -34,7 +34,7 @@ export async function GET(request) {
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: `${process.env.FRONTEND_URL || 'http://localhost:3010'}/api/auth/google/callback`,
+        redirect_uri: `${process.env.PROD_URL || 'http://localhost:3010'}/api/auth/google/callback`,
       }),
     });
 
@@ -119,13 +119,13 @@ export async function GET(request) {
     );
 
     // Redirect to frontend with tokens
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3010';
+    const frontendUrl = process.env.PROD_URL || 'http://localhost:3010';
     const redirectUrl = `${frontendUrl}/auth/callback?token=${accessToken}&refresh=${refreshToken}`;
     
     return NextResponse.redirect(redirectUrl);
   } catch (error) {
     console.error('Google callback error:', error);
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3010';
+    const frontendUrl = process.env.PROD_URL || 'http://localhost:3010';
     return NextResponse.redirect(`${frontendUrl}/login?error=auth_failed`);
   }
 }
