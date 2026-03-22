@@ -73,6 +73,7 @@ This application helps users manage their subscription services efficiently by p
 - Node.js 18+ 
 - MongoDB database (local or cloud)
 - ExchangeRate-API key (free tier available)
+- Docker and Docker Compose (for Elasticsearch - optional but recommended)
 
 ### Quick Start
 
@@ -88,7 +89,7 @@ This application helps users manage their subscription services efficiently by p
    ```
 
 3. **Set up environment variables**
-   Create a `.env.local` file in the root directory:
+   Create a `.env.local` file in the `subscription-management` directory:
    ```env
    # Database
    MONGODB_URI=mongodb://localhost:27017/subscription-management
@@ -102,13 +103,30 @@ This application helps users manage their subscription services efficiently by p
    # Google OAuth (optional)
    GOOGLE_CLIENT_ID=your_google_client_id
    GOOGLE_CLIENT_SECRET=your_google_client_secret
+   
+   # Elasticsearch (optional - for advanced search)
+   ELASTICSEARCH_URL=http://localhost:9200
    ```
 
-4. **Initialize the database**
+4. **Start Elasticsearch and Kibana** (optional - for full-text search features)
+   ```bash
+   # From subscription-management directory
+   docker-compose up -d
+   
+   # Verify Elasticsearch is running
+   curl http://localhost:9200
+   
+   # Access Kibana UI (visual interface for Elasticsearch)
+   # Open http://localhost:5601 in your browser
+   ```
+
+5. **Initialize the database**
    ```bash
    npm run init-db
    ```
 
+6. **Sync subscriptions to Elasticsearch** (if using Elasticsearch)
+   After starting your app and logging in, call:
 5. **Run the development server**
    ```bash
    npm run dev
@@ -263,6 +281,7 @@ npm run init-db      # Initialize database with sample data
 | `MONGODB_URI` | MongoDB connection string | Yes |
 | `JWT_SECRET` | Secret key for JWT tokens | Yes |
 | `EXCHANGE_RATE_API_KEY` | API key for currency conversion | Yes |
+| `ELASTICSEARCH_URL` | Elasticsearch connection URL | No |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID | No |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | No |
 
@@ -303,8 +322,12 @@ npm install
 
 ## 📚 Documentation
 
-Additional documentation is available in the `/docs` folder:
+Additional documentation is available in the `docs/` folder:
 - `AUTHENTICATION_SETUP.md` - Authentication setup guide
+- `ELASTICSEARCH_SETUP.md` - Elasticsearch integration guide
+- `HOW_TO_CHECK_ELASTICSEARCH.md` - How to verify Elasticsearch is working
+- `KIBANA_GUIDE.md` - **Step-by-step guide to view and explore your data in Kibana**
+- `VERCEL_DEPLOYMENT.md` - **Complete guide for deploying to Vercel**
 - `SUGGESTIONS.md` - Feature suggestions and roadmap
 - `UTILS_README.md` - Utility functions documentation
 
