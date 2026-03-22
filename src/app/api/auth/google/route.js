@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function GET(request) {
   try {
     // Get the base URL for the callback
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3010';
+    const baseUrl = process.env.PROD_URL || 'http://localhost:3010';
     const callbackUrl = `${baseUrl}/api/auth/google/callback`;
     
     // Google OAuth URL parameters
